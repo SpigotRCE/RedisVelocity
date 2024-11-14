@@ -140,8 +140,13 @@ public class RedisVelocityListener {
     @SuppressWarnings("UnstableApiUsage")
     @Subscribe
     public void onPluginMessage(final PluginMessageEvent event) {
-        if ((event.getIdentifier().getId().equals("legacy:redisvelocity") || event.getIdentifier().getId()
-                .equals("RedisVelocity")) && event.getSource() instanceof ServerConnection) {
+        if (event.getIdentifier().getId().equals("legacy:redisvelocity") || event.getIdentifier().getId()
+                .equals("RedisVelocity")) {
+            if (!(event.getSource() instanceof ServerConnection)) { // Someone is being nasty and trying to send a message form the client
+                event.setResult(PluginMessageEvent.ForwardResult.handled()); // Let's not forward that to the backend
+                return;
+            }
+
             final byte[] data = Arrays.copyOf(event.getData(), event.getData().length);
             plugin.getServer().getScheduler().buildTask(plugin, () -> {
                 ByteArrayDataInput in = ByteStreams.newDataInput(data);
